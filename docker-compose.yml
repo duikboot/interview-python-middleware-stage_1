@@ -1,0 +1,10 @@
+api:
+  tty: true
+  stdin_open: true
+  container_name: api
+  build: "./"
+  restart: unless-stopped
+  volumes:
+    - .:/app
+  ports:
+    - 8000:8000

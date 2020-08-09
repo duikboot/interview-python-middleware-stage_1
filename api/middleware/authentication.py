@@ -1,11 +1,44 @@
+import re
 from typing import Any, Dict
 
 import falcon
 from haps import Inject
 
+import settings
 from api.middleware import Middleware
 from api.resources import Resource
 from core.registry import Registry
+
+API_KEY_REGEX = re.compile(r".*user-session.*Apikey\s+(?P<token>\b\w+\b)")
+
+
+def is_correct_api_key(access_token: str) -> bool:
+    """
+    >>> is_correct_api_key("Bearer user-session")
+    False
+    >>> is_correct_api_key("Bearer user-session,")
+    False
+    >>> is_correct_api_key(" Bearer user-session")
+    False
+    >>> is_correct_api_key("Bearer user-session,Apikey ILoveKittens")
+    True
+    >>> is_correct_api_key("Bearer user-session, Apikey ILoveKittens ")
+    True
+    >>> is_correct_api_key("Bearer user-session, Apikey ILoveKittens,")
+    True
+    >>> is_correct_api_key("Bearer user-session, Apikey ILoveKittens")
+    True
+    """
+
+    match = API_KEY_REGEX.match(access_token)
+
+    if match:
+        token = match.group("token")
+
+        if token == settings.API_KEY:
+            return True
+
+    return False
 
 
 class AuthenticationMiddleware(Middleware):
@@ -13,10 +46,34 @@ class AuthenticationMiddleware(Middleware):
 
     def process_request(self, req: falcon.Request, resp: falcon.Response) -> None:
         token = req.auth
+        relative_uri = req.relative_uri
+
         if not token:
-            return
-        token_type, _, access_token = token.partition(" ")
-        if token_type == "Bearer":
+            if relative_uri not in settings.NO_AUTH_REQUIRED.uris:
+                if relative_uri in settings.NO_SESSION_TOKEN_REQUIRED.uris:
+                    raise falcon.HTTPUnauthorized("Unauthorized")
+                raise falcon.HTTPForbidden("Forbidden")
+
+        if token:
+
+            token_type, _, access_token = token.partition(" ")
+
+            if is_correct_api_key(access_token):
+                prio = 3
+            elif not access_token:
+                prio = 1
+            else:
+                prio = 2
+
+            auth_type = next(i for i in settings.AUTH_CLASSES if relative_uri in i.uris)
+
+            auth = auth_type.__class__(auth_type.uris, prio)
+
+            if auth < auth_type:
+                if prio == 1:
+                    raise falcon.HTTPUnauthorized("neee")
+                raise falcon.HTTPForbidden("Forbidden")
+
             self.registry.access_token = access_token  # type: ignore
 
     def process_resource(

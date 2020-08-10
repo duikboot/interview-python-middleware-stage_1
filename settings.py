@@ -7,7 +7,7 @@ API_KEY = "ILoveKittens"
 @dataclass(order=True)
 class AuthOrder:
     uris: tuple
-    order: int
+    level: int
 
 
 NO_AUTH_REQUIRED = AuthOrder(("/auth/register", "/collections"), 1)

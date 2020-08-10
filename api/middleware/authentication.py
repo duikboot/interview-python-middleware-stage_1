@@ -57,21 +57,24 @@ class AuthenticationMiddleware(Middleware):
         if token:
 
             token_type, _, access_token = token.partition(" ")
+            if token_type != "Bearer":
+                falcon.HTTPForbidden("Forbidden")
 
             if is_correct_api_key(access_token):
-                prio = 3
+                level = 3
             elif not access_token:
-                prio = 1
+                level = 1
             else:
-                prio = 2
+                level = 2
 
-            auth_type = next(i for i in settings.AUTH_CLASSES if relative_uri in i.uris)
+            auth_type = next(i for i in settings.AUTH_CLASSES
+                             if relative_uri in i.uris)
 
-            auth = auth_type.__class__(auth_type.uris, prio)
+            auth = auth_type.__class__(auth_type.uris, level)
 
             if auth < auth_type:
-                if prio == 1:
-                    raise falcon.HTTPUnauthorized("neee")
+                if level == 1:
+                    raise falcon.HTTPUnauthorized("Unauthorized")
                 raise falcon.HTTPForbidden("Forbidden")
 
             self.registry.access_token = access_token  # type: ignore

@@ -14,8 +14,6 @@ NO_AUTH_REQUIRED = AuthOrder(("/auth/register", "/collections"), 1)
 
 NO_SESSION_TOKEN_REQUIRED = AuthOrder(("/users/whoami",), 2)
 
-SESSION_TOKEN_REQUIRED = AuthOrder(
-    ("/internal/users", "/internal/collections"), 3)
+SESSION_TOKEN_REQUIRED = AuthOrder(("/internal/users", "/internal/collections"), 3)
 
-AUTH_CLASSES = (NO_AUTH_REQUIRED, NO_SESSION_TOKEN_REQUIRED,
-                SESSION_TOKEN_REQUIRED)
+AUTH_CLASSES = (NO_AUTH_REQUIRED, NO_SESSION_TOKEN_REQUIRED, SESSION_TOKEN_REQUIRED)

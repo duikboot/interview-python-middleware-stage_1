@@ -67,8 +67,7 @@ class AuthenticationMiddleware(Middleware):
             else:
                 level = 2
 
-            auth_type = next(i for i in settings.AUTH_CLASSES
-                             if relative_uri in i.uris)
+            auth_type = next(i for i in settings.AUTH_CLASSES if relative_uri in i.uris)
 
             auth = auth_type.__class__(auth_type.uris, level)
 

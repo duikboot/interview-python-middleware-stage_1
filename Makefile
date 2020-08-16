@@ -12,3 +12,6 @@ run-docker: Dockerfile
 
 test:
 	$(PYTEST) --capture=no --verbose --doctest-modules
+
+format:
+	invoke format
